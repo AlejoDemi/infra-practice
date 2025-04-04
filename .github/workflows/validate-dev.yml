@@ -1,0 +1,51 @@
+name: Validate Terraform - PR Check
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: ☁️ Setup Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.6
+
+      - name: 🌱 Terraform Init
+        run: terraform init
+        working-directory: infra/environments/dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
+      - name: 🗂️ Crear carpeta artifacts
+        run: mkdir -p artifacts/dev
+
+      - name: 📦 Crear zip Layer
+        run: |
+          mkdir -p artifacts/dev
+          cd layers/aws-sdk
+          npm ci --prefix nodejs
+          cd ../..
+          zip -r artifacts/dev/aws_sdk_layer.zip layers/aws-sdk/nodejs
+
+      - name: 📦 Crear zip Lambda
+        run: |
+          cd lambda
+          npm ci
+          zip -r ../artifacts/dev/lambda_function.zip index.js node_modules
+
+      - name: ✅ Terraform Validate
+        run: terraform validate
+        working-directory: infra/environments/dev
+
+      - name: 🧪 Terraform Plan
+        run: terraform plan
+        working-directory: infra/environments/dev
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
