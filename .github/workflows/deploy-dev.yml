@@ -30,11 +30,10 @@ jobs:
 
       - name: 📦 Crear zip Layer
         run: |
-          mkdir -p layers/nodejs
-          cd layers
+          cd layers/aws-sdk
           npm ci --prefix nodejs
-          cd ..
-          zip -r artifacts/dev/aws_sdk_layer.zip layers/nodejs
+          cd ../..
+          zip -r artifacts/dev/aws_sdk_layer.zip layers/aws-sdk/nodejs
 
       - name: ☁️ Setup Terraform
         uses: hashicorp/setup-terraform@v2
