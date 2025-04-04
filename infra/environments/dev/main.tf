@@ -1,4 +1,4 @@
-# main.tf
+# main.tf test cicd
 provider "aws" {
   region = "us-east-1"
 }
@@ -44,3 +44,4 @@ terraform {
     dynamodb_table = "terraform-locks"
   }
 }
+
