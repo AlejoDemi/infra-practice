@@ -22,6 +22,16 @@ jobs:
         with:
           node-version: 18
 
+      - name: 🗂️ Crear carpeta artifacts
+        run: mkdir -p artifacts/dev
+
+      - name: 📦 Crear zip Lambda
+        run: |
+          cd lambda
+          npm ci
+          zip -r ../artifacts/dev/lambda_function.zip index.js node_modules
+
+
       - name: 📦 Crear zip Lambda
         run: |
           cd lambda
