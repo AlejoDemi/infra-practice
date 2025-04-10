@@ -20,7 +20,7 @@ jobs:
         run: |
           cd lambda
           npm ci
-          zip -r ../artifacts/dev/lambda_function.zip index.js node_modules
+          zip -r ../artifacts/dev/lambda_function.zip index.js
 
       - name: 📦 Crear zip Layer
         run: |

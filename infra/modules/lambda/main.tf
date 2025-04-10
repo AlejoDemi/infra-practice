@@ -5,8 +5,12 @@ resource "aws_lambda_function" "upload_photo" {
   filename         = var.zip_path
   source_code_hash = filebase64sha256(var.zip_path)
   role             = var.role_arn
-  layers           = [var.layer_arn]
-
+  
+  layers = [
+    module.layer_pg.layer_arn,
+    module.layer_aws_sdk.layer_arn
+  ]
+  
   vpc_config {
     subnet_ids         = var.subnet_ids
     security_group_ids = var.security_group_ids
