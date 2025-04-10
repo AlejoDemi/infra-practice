@@ -28,10 +28,10 @@ jobs:
       - name: 📦 Crear zip Layer
         run: |
           mkdir -p artifacts/dev
-          cd layers/aws-sdk
+          cd layers/aws-sdk/nodejs
           npm ci --prefix nodejs
           cd ../..
-          zip -r artifacts/dev/aws_sdk_layer.zip layers/aws-sdk/nodejs
+          zip -r artifacts/dev/aws_sdk_layer.zip aws-sdk/nodejs
 
       - name: 📦 Crear zip Lambda
         run: |
