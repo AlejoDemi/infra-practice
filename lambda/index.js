@@ -1,46 +1,53 @@
-const AWS = require("aws-sdk");
+const AWS = require('aws-sdk');
+const { Client } = require('pg');
+
 const s3 = new AWS.S3();
 
 exports.handler = async (event) => {
-  console.log("📦 EVENT:", JSON.stringify(event));
-  
+  const { imageBase64 } = JSON.parse(event.body || '{}');
+
+  const buffer = Buffer.from(imageBase64, 'base64');
+  const key = `photos/${Date.now()}.jpg`;
+
   try {
-    const body = typeof event.body === "string" ? JSON.parse(event.body) : event.body;
-
-    if (!body || !body.imageBase64) {
-      throw new Error("Falta imageBase64 en el body");
-    }
-
-    const image = Buffer.from(body.imageBase64, "base64");
-
-    const bucket = process.env.BUCKET_NAME;
-    if (!bucket) throw new Error("BUCKET_NAME no definido en environment");
-
-    const key = `foto-${Date.now()}.jpg`;
-
     await s3.putObject({
-      Bucket: bucket,
+      Bucket: process.env.BUCKET_NAME,
       Key: key,
-      Body: image,
-      ContentType: "image/jpeg",
+      Body: buffer,
+      ContentType: 'image/jpeg',
     }).promise();
+
+    const client = new Client({
+      host: process.env.DB_HOST,
+      port: parseInt(process.env.DB_PORT),
+      user: process.env.DB_USER,
+      password: process.env.DB_PASSWORD,
+      database: process.env.DB_NAME,
+    });
+
+    await client.connect();
+
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS photos (
+        id SERIAL PRIMARY KEY,
+        key TEXT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+
+    await client.query(`INSERT INTO photos (key) VALUES ($1)`, [key]);
+
+    await client.end();
 
     return {
       statusCode: 200,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ message: "Foto subida!", key }),
+      body: JSON.stringify({ message: 'Imagen subida y guardada en RDS correctamente 🎉', key }),
     };
-  } catch (error) {
-    console.error("💥 ERROR:", error.message);
-
+  } catch (err) {
+    console.error(err);
     return {
       statusCode: 500,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        error: error.message || "Error desconocido",
-        stack: error.stack,
-      }),
+      body: JSON.stringify({ message: 'Error en la Lambda', error: err.message }),
     };
   }
 };
-

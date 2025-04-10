@@ -7,9 +7,21 @@ resource "aws_lambda_function" "upload_photo" {
   role             = var.role_arn
   layers           = [var.layer_arn]
 
+  vpc_config {
+    subnet_ids         = var.subnet_ids
+    security_group_ids = var.security_group_ids
+  }
+
+
   environment {
     variables = {
       BUCKET_NAME = var.bucket_name
+      DB_HOST     = var.db_host
+      DB_PORT     = "5432"
+      DB_NAME     = var.db_name
+      DB_USER     = var.db_user
+      DB_PASSWORD = var.db_password
     }
   }
 }
+
